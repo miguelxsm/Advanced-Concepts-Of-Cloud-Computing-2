@@ -1,5 +1,6 @@
 import time
 import boto3
+import os
 from botocore.exceptions import ClientError
 from infrastructure.constants import REGION, SG_ORCHESTRATOR_NAME, SG_WORKERS_NAME
 
@@ -31,8 +32,10 @@ def _terminate_instances_and_wait(ids: list[str]) -> None:
     if not ids:
         return
     ec2.terminate_instances(InstanceIds=ids)
+    print(f"Terminating instances: {ids}...")
     waiter = ec2.get_waiter("instance_terminated")
     waiter.wait(InstanceIds=ids)
+    print(f"Instances terminated: {ids}")
 
 def _delete_sg_with_retry(sg_id: str, retries: int = 5) -> None:
     if not sg_id: 
@@ -51,21 +54,20 @@ def _delete_sg_with_retry(sg_id: str, retries: int = 5) -> None:
                 return
             raise
 
-def destroy_all():
-    """
-    Elimina **instancias EC2** asociadas a los SG de orchestrator/workers
-    y luego borra **ambos Security Groups**. No toca LB/Target Groups porque
-    este assignment **no** los usa.
-    """
-    # 1) Resolver IDs de SG por nombre (creados por tu pipeline)
+def destroy_all(path_json:str):
+
+    try:
+        os.remove(path_json)
+    
+    except FileNotFoundError:
+        pass
     sg_orch_id   = _get_sg_id_by_name(SG_ORCHESTRATOR_NAME)
     sg_workers_id= _get_sg_id_by_name(SG_WORKERS_NAME)
+
     sg_ids = [x for x in [sg_orch_id, sg_workers_id] if x]
 
-    # 2) Terminar instancias asociadas a esos SG (si las hay)
     instance_ids = _list_instance_ids_for_sgs(sg_ids)
     _terminate_instances_and_wait(instance_ids)
 
-    # 3) Borrar SG (después de que no estén en uso)
     _delete_sg_with_retry(sg_workers_id)
     _delete_sg_with_retry(sg_orch_id)
