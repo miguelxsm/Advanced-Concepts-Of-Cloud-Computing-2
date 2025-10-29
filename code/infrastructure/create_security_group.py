@@ -8,15 +8,21 @@ ec2_resource = boto3.resource("ec2", region_name=c.REGION)
 ec2_client = boto3.client("ec2", region_name=c.REGION)
 
 def allow_orchestrator_to_workers(workers_sg_id, orchestrator_sg_id):
-    ec2_client.authorize_security_group_ingress(
-        GroupId=workers_sg_id,
-        IpPermissions=[{
-            "IpProtocol": "tcp",
-            "FromPort": 5000,
-            "ToPort": 5003,
-            "UserIdGroupPairs": [{"GroupId": orchestrator_sg_id}]
-        }]
-    )
+    try:
+        ec2_client.authorize_security_group_ingress(
+            GroupId=workers_sg_id,
+            IpPermissions=[{
+                "IpProtocol": "tcp",
+                "FromPort": 5000,
+                "ToPort": 5003,
+                "UserIdGroupPairs": [{"GroupId": orchestrator_sg_id}]
+            }]
+        )
+
+    except ClientError as e:
+        if e.response["Error"]["Code"] != "InvalidPermission.Duplicate": raise
+        #ignore duplicate - simple solution
+        
 
 def security_group_exists(SECURITY_GROUP_NAME):
     try:
