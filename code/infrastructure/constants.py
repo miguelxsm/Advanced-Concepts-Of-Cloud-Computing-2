@@ -1,5 +1,5 @@
 REGION = "us-east-1"
-SG_ORCHESTRATOR_NAME = "sg-orchestrator"
+SG_ORCHESTRATOR_NAME = "orchestrator"
 
 IP_PERMISSIONS_ORCHESTRATOR = [
     {
@@ -16,7 +16,7 @@ IP_PERMISSIONS_ORCHESTRATOR = [
     }
 ]
 
-SG_WORKERS_NAME = "sg-workers"
+SG_WORKERS_NAME = "workers"
 
 
 REQUIRED_METRICS = [
