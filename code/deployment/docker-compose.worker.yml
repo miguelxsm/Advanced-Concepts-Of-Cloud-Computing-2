@@ -1,0 +1,18 @@
+services:
+  worker1:
+    build:
+      context: ../worker
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+
+  worker2:
+    build:
+      context: ../worker
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      PORT: 5000
